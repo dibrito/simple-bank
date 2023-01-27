@@ -1,0 +1,11 @@
+version: "1"
+packages:
+  - name: "db"
+    path: "./db/sqlc"
+    queries: "./db/query/"
+    schema: "./db/migration/"
+    engine: "postgresql"
+    emit_json_tags: true # add json tags
+    emit_prepared_queries: false # generate code that work with prepated statement
+    emit_interface: false # mocks
+    emit_exact_table_names: false # will sigularize structs table accounts - struct account,s

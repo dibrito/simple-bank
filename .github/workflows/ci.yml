@@ -38,6 +38,15 @@ jobs:
       with:
         go-version: 1.19
 
+    # we need to move the binary to usr/bin/
+    # to get binary name run the curl locally
+    # and check if migrate is working with which
+    - name: Install golang-migrate
+      run: |
+      $ curl -L https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz | tar xvz
+      sudo mv migrate /usr/bin/
+      which migrate
+
     - name: Run Migration
       run: make migrateup
 

@@ -23,4 +23,7 @@ test:
 server:
 	go run main.go
 
+mock:
+	mockgen -package db_mock --destination=./db/mocks/store.go github.com/dibrito/simple-bank/db/sqlc Store
+
 .PHONY: dropdb createdb dropdb migrateup migratedown sqlc test server

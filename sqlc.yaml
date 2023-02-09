@@ -7,6 +7,6 @@ packages:
     engine: "postgresql"
     emit_json_tags: true # add json tags
     emit_prepared_queries: false # generate code that work with prepated statement
-    emit_interface: false # mocks
+    emit_interface: true # will create Queries interface with all db methods for accoubnts, transfer, etc.
     emit_exact_table_names: false # will sigularize structs table accounts - struct account,s
     emit_empty_slices: true # will initialize slices to not return nill if no data

@@ -13,6 +13,7 @@ import (
 	db_mock "github.com/dibrito/simple-bank/db/mocks"
 	db "github.com/dibrito/simple-bank/db/sqlc"
 	"github.com/dibrito/simple-bank/db/util"
+	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 )
@@ -86,6 +87,96 @@ func TestGetAccountApi(t *testing.T) {
 			// build request
 			url := fmt.Sprintf("/accounts/%v", tc.accountID)
 			req, err := http.NewRequest(http.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			server.router.ServeHTTP(recorder, req)
+			tc.checkResponse(t, recorder)
+		})
+	}
+}
+
+func TestCreateAccountApi(t *testing.T) {
+	account := randomAccount()
+	tcs := []struct {
+		name          string
+		body          gin.H
+		accountID     int64
+		setStubs      func(store *db_mock.MockStore)
+		checkResponse func(t *testing.T, recoder *httptest.ResponseRecorder)
+	}{
+		{
+			accountID: account.ID,
+			body: gin.H{
+				"owner":    account.Owner,
+				"currency": account.Currency,
+			},
+			name: "when valid request should create account - OK",
+			setStubs: func(store *db_mock.MockStore) {
+				store.EXPECT().CreateAccount(gomock.Any(), db.CreateAccountParams{
+					Owner:    account.Owner,
+					Currency: account.Currency,
+				}).Times(1).Return(account, nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				requireBodyMatchAccount(t, recorder.Body, account)
+			},
+		},
+		{
+			accountID: account.ID,
+			body: gin.H{
+				"owner":    account.Owner,
+				"currency": "XXX",
+			},
+			name: "when ivalid request should return - 400",
+			setStubs: func(store *db_mock.MockStore) {
+				store.EXPECT().CreateAccount(gomock.Any(), gomock.Any()).Times(0).Return(db.Account{}, nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			accountID: account.ID,
+			body: gin.H{
+				"owner":    account.Owner,
+				"currency": account.Currency,
+			},
+			name: "when error in store should return - 500",
+			setStubs: func(store *db_mock.MockStore) {
+				store.EXPECT().CreateAccount(gomock.Any(), db.CreateAccountParams{
+					Owner:    account.Owner,
+					Currency: account.Currency,
+				}).Times(1).Return(db.Account{}, sql.ErrConnDone)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+	}
+
+	for _, tc := range tcs {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			// mock store
+			store := db_mock.NewMockStore(ctrl)
+			tc.setStubs(store)
+
+			// build server
+			server := NewServer(store)
+			// respose recorder
+			recorder := httptest.NewRecorder()
+
+			// build request
+			url := "/accounts"
+
+			body, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
 			require.NoError(t, err)
 
 			server.router.ServeHTTP(recorder, req)

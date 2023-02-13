@@ -6,7 +6,7 @@ import (
 
 	"github.com/dibrito/simple-bank/api"
 	db "github.com/dibrito/simple-bank/db/sqlc"
-	"github.com/dibrito/simple-bank/db/util"
+	"github.com/dibrito/simple-bank/util"
 	_ "github.com/lib/pq"
 )
 

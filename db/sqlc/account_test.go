@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dibrito/simple-bank/db/util"
+	"github.com/dibrito/simple-bank/util"
 	"github.com/stretchr/testify/require"
 )
 

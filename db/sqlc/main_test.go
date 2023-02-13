@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/dibrito/simple-bank/db/util"
+	"github.com/dibrito/simple-bank/util"
 	_ "github.com/lib/pq"
 )
 

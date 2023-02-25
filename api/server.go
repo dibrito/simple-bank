@@ -25,7 +25,7 @@ func NewServer(store db.Store) *Server {
 		v.RegisterValidation("currency", validCurrency)
 	}
 
-	// TODO add routes to the router
+	router.POST("/users", s.createUser)
 	// note POST receives multipe funcs and and last is the handler
 	// others are middlewares
 	router.POST("/accounts", s.createAccount)

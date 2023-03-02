@@ -58,6 +58,7 @@ func (s *Server) createUser(ctx *gin.Context) {
 		CreatedAt         time.Time `json:"created_at"`
 	}
 	user.Username = u.Username
+	user.Email = u.Email
 	user.FullName = u.FullName
 	user.PasswordChangedAt = u.PasswordChangedAt
 	user.CreatedAt = u.CreatedAt

@@ -255,13 +255,10 @@ func TestListAccountApi(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			// mock store
 			store := db_mock.NewMockStore(ctrl)
 			tc.setStubs(store)
 
-			// build server
 			server := NewServer(store)
-			// respose recorder
 			recorder := httptest.NewRecorder()
 
 			// build request

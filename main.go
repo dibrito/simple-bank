@@ -17,19 +17,22 @@ import (
 // )
 
 func main() {
-	c, err := util.LoadConfig(".")
+	config, err := util.LoadConfig(".")
 	if err != nil {
 		log.Fatalf("cannot load config:%v", err)
 	}
-	conn, err := sql.Open(c.DBDriver, c.DBSource)
+	conn, err := sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatalf("unable to open db connection:%v", err)
 	}
 
 	store := db.NewStore(conn)
-	server := api.NewServer(store)
+	server, err := api.NewServer(config, store)
+	if err != nil {
+		log.Fatalf("cannot create server:%v", err)
+	}
 
-	err = server.Start(c.ServerAddress)
+	err = server.Start(config.ServerAddress)
 	if err != nil {
 		log.Fatalf("cannot start server:%v", err)
 	}

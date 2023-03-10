@@ -177,7 +177,7 @@ func TestCreateUserApi(t *testing.T) {
 			store := db_mock.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server := NewServer(store)
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
 			url := "/users"

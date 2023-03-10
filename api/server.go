@@ -1,7 +1,11 @@
 package api
 
 import (
+	"fmt"
+
 	db "github.com/dibrito/simple-bank/db/sqlc"
+	"github.com/dibrito/simple-bank/token"
+	"github.com/dibrito/simple-bank/util"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -9,32 +13,54 @@ import (
 
 // Server serves HTTP requests for our banking service.
 type Server struct {
-	store  db.Store
-	router *gin.Engine
+	store      db.Store
+	tokenMaker token.Maker
+	router     *gin.Engine
+	config     util.Config
 }
 
 // NewServer creates a new HTTP server and setup routing.
-func NewServer(store db.Store) *Server {
-	s := &Server{
-		store: store,
+func NewServer(config util.Config, store db.Store) (*Server, error) {
+	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
+	if err != nil {
+		return nil, fmt.Errorf("can not create token maker: %v", err)
 	}
-	router := gin.Default()
+	server := &Server{
+		store:      store,
+		config:     config,
+		tokenMaker: tokenMaker,
+	}
 
 	// bind custom validators
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("currency", validCurrency)
 	}
 
+	server.setupRouter()
+	// router.POST("/users", s.createUser)
+	// router.POST("/users/login", s.loginUser)
+	// // note POST receives multipe funcs and and last is the handler
+	// // others are middlewares
+	// router.POST("/accounts", s.createAccount)
+	// router.GET("/accounts/:id", s.getAccount)
+	// router.GET("/accounts/", s.listAccount)
+
+	// router.POST("/transfers", s.createTransfer)
+
+	return server, nil
+}
+
+func (s *Server) setupRouter() {
+	router := gin.Default()
 	router.POST("/users", s.createUser)
+	router.POST("/users/login", s.loginUser)
 	// note POST receives multipe funcs and and last is the handler
 	// others are middlewares
 	router.POST("/accounts", s.createAccount)
 	router.GET("/accounts/:id", s.getAccount)
 	router.GET("/accounts/", s.listAccount)
-
 	router.POST("/transfers", s.createTransfer)
 	s.router = router
-	return s
 }
 
 // Start runs the HTTP server on a specif andresss to start handling api requests.

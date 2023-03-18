@@ -37,16 +37,6 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 	}
 
 	server.setupRouter()
-	// router.POST("/users", s.createUser)
-	// router.POST("/users/login", s.loginUser)
-	// // note POST receives multipe funcs and and last is the handler
-	// // others are middlewares
-	// router.POST("/accounts", s.createAccount)
-	// router.GET("/accounts/:id", s.getAccount)
-	// router.GET("/accounts/", s.listAccount)
-
-	// router.POST("/transfers", s.createTransfer)
-
 	return server, nil
 }
 
@@ -54,12 +44,15 @@ func (s *Server) setupRouter() {
 	router := gin.Default()
 	router.POST("/users", s.createUser)
 	router.POST("/users/login", s.loginUser)
+
+	authRoutes := router.Group("/").Use(authMiddleware(s.tokenMaker))
+
 	// note POST receives multipe funcs and and last is the handler
 	// others are middlewares
-	router.POST("/accounts", s.createAccount)
-	router.GET("/accounts/:id", s.getAccount)
-	router.GET("/accounts/", s.listAccount)
-	router.POST("/transfers", s.createTransfer)
+	authRoutes.POST("/accounts", s.createAccount)
+	authRoutes.GET("/accounts/:id", s.getAccount)
+	authRoutes.GET("/accounts/", s.listAccount)
+	authRoutes.POST("/transfers", s.createTransfer)
 	s.router = router
 }
 

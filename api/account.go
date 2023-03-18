@@ -2,15 +2,17 @@ package api
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 
 	db "github.com/dibrito/simple-bank/db/sqlc"
+	"github.com/dibrito/simple-bank/token"
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
 )
 
 type createAccountRequest struct {
-	Owner    string `json:"owner" binding:"required"`
+	// Owner    string `json:"owner" binding:"required"`
 	Currency string `json:"currency" binding:"required,currency"`
 }
 
@@ -21,8 +23,10 @@ func (s *Server) createAccount(ctx *gin.Context) {
 		return
 	}
 
+	// get owner
+	payload := ctx.MustGet(authPayloadKey).(*token.Payload)
 	acc, err := s.store.CreateAccount(ctx, db.CreateAccountParams{
-		Owner:    req.Owner,
+		Owner:    payload.Username,
 		Currency: req.Currency,
 	})
 	if err != nil {
@@ -61,6 +65,14 @@ func (s *Server) getAccount(ctx *gin.Context) {
 		return
 	}
 
+	// get owner
+	payload := ctx.MustGet(authPayloadKey).(*token.Payload)
+	if acc.Owner != payload.Username {
+		err := fmt.Errorf("account does not belong to authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
 	ctx.JSON(http.StatusOK, acc)
 }
 
@@ -76,7 +88,9 @@ func (s *Server) listAccount(ctx *gin.Context) {
 		return
 	}
 
+	payload := ctx.MustGet(authPayloadKey).(*token.Payload)
 	acc, err := s.store.ListAccounts(ctx, db.ListAccountsParams{
+		Owner: payload.Username,
 		// offset is the number of records the database should skip
 		Offset: (req.PageID - 1) * req.PageSize,
 		// page size

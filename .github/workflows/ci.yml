@@ -49,6 +49,7 @@ jobs:
         pwd
         echo ${GOPATH}
         echo ${GOROOT}
+        ls -l
 
     # we need to move the binary to usr/bin/
     # to get binary name run the curl locally
@@ -65,5 +66,5 @@ jobs:
     - name: Test
       run: make test
       env:
-        GOPATH: /home/runner/work/simple-bank/simple-bank/go
+        GOPATH: /home/runner/work/simple-bank/go
         

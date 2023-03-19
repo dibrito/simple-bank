@@ -52,6 +52,9 @@ jobs:
         pwd
         echo ${GOPATH}
         echo ${GOROOT}
+        go mod vendor -v 
+        go mod tidy
+        
 
     # we need to move the binary to usr/bin/
     # to get binary name run the curl locally

@@ -32,4 +32,4 @@ server:
 mock:
 	mockgen -package db_mock --destination=./db/mocks/store.go github.com/dibrito/simple-bank/db/sqlc Store
 
-.PHONY: dropdb createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test server
+.PHONY: postgress createdb dropdb migrateup migrateup1 migratedown migratedown1 sqlc test server mock

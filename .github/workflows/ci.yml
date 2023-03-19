@@ -65,4 +65,5 @@ jobs:
     - name: Test
       run: make test
       env:
-        GOPATH: /home/runner/work/simple-bank/go
+        GOPATH: /home/runner/work/simple-bank/simple-bank/go
+        

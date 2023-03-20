@@ -37,13 +37,18 @@ jobs:
 
     steps:
     - name: Set up Go
-      # uses: actions/checkout@v3
-      uses: actions/setup-go@v4
+      uses: actions/checkout@v3
       with:
         go-version: 1.20
 
+    - name: Debug
+      run: |
+        pwd
+        echo ${GOPATH}
+        echo ${GOROOT}
+
     - name: Check out code to a GOPATH compatible directory
-      uses: actions/checkout@v3
+      uses: actions/checkout@v1
       with:
         fetch-depth: 1
         path: go/src/github.com/dibrito/simple-bank
@@ -54,7 +59,6 @@ jobs:
         echo ${GOPATH}
         echo ${GOROOT}
         
-
     # we need to move the binary to usr/bin/
     # to get binary name run the curl locally
     # and check if migrate is working with which

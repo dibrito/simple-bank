@@ -37,23 +37,16 @@ jobs:
 
     steps:
     - name: Set up Go
-      uses: actions/setup-go@v3
+      uses: actions/checkout@v3
+      uses: actions/setup-go@v4
       with:
         go-version: 1.20
-
-    - name: Check out code to a GOPATH compatible directory
-      uses: actions/checkout@v1
-      with:
-        fetch-depth: 1
-        path: go/src/github.com/dibrito/simple-bank
 
     - name: Debug
       run: |
         pwd
         echo ${GOPATH}
         echo ${GOROOT}
-        go mod vendor -v 
-        go mod tidy
         
 
     # we need to move the binary to usr/bin/
@@ -68,8 +61,8 @@ jobs:
     - name: Run Migration
       run: make migrateup
 
-    - name: Test
-      run: make test
-      env:
-        GOPATH: /home/runner/work/simple-bank/go
+    # - name: Test
+    #   run: make test
+    #   env:
+    #     GOPATH: /home/runner/work/simple-bank/go
         

@@ -71,8 +71,8 @@ jobs:
     - name: Run Migration
       run: make migrateup
 
-    # - name: Test
-    #   run: make test
-    #   env:
-    #     GOPATH: /home/runner/work/simple-bank/go
+    - name: Test
+      run: make test
+      env:
+        GOPATH: /home/runner/work/simple-bank/go
         

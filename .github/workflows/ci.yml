@@ -37,10 +37,16 @@ jobs:
 
     steps:
     - name: Set up Go
-      uses: actions/checkout@v3
+      # uses: actions/checkout@v3
       uses: actions/setup-go@v4
       with:
         go-version: 1.20
+
+    - name: Check out code to a GOPATH compatible directory
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+        path: go/src/github.com/dibrito/simple-bank
 
     - name: Debug
       run: |

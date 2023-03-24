@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 	"time"
 
@@ -50,6 +51,7 @@ func newUserResponse(u db.User) userResponse {
 }
 
 func (s *Server) createUser(ctx *gin.Context) {
+	log.Println("=============create user=============")
 	var req createUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))

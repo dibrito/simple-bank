@@ -15,6 +15,8 @@ jobs:
     name: Build Image
     runs-on: ubuntu-latest
 
-  steps:
-  - name: Debugging
-    run: pwd
+    steps:
+    - name: Set up Go
+      uses: actions/checkout@v3
+      with:
+        go-version: 1.20

@@ -11,24 +11,22 @@ on:
 
 jobs:
 
-  build:
-    name: Build image
+  deploy:
+    name: Build Image
     runs-on: ubuntu-latest
 
   steps:
-  # - name: Check out code
-  #   uses: actions/checkout@v3
   - name: Debugging
     run: |
       pwd
       echo 'debugging!!'
       ls -l
 
-  - name: Login to docker hub
-    uses: actions-hub/docker/login@master
-    env:
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  # - name: Login to docker hub
+  #   uses: actions-hub/docker/login@master
+  #   env:
+  #     DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  #     DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
   # - name: Build :latest
   #   run: docker build -t ${GITHUB_REPOSITORY}:latest .

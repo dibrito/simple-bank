@@ -6,18 +6,23 @@ name: Deploy to production
 on:
   push:
     branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
-  - name: Check out code to a GOPATH compatible directory
-    uses: actions/checkout@v3
-
-  - name: Debug
-    run: |
-      pwd
 
   build:
     name: Build image
     runs-on: ubuntu-latest
+
+  - name: Check out code to a GOPATH compatible directory
+    uses: actions/checkout@v3
+
+  - name: Debug
+      run: |
+        pwd
+        echo 'debugging!!'
+        ls -l
 
   - name: Login to docker hub
     uses: actions-hub/docker/login@master

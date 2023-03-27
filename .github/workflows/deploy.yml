@@ -19,7 +19,7 @@ jobs:
   - name: Check out code
     uses: actions/checkout@v3
 
-  - name: Debug
+  - name: Debugging
     run: |
       pwd
       echo 'debugging!!'

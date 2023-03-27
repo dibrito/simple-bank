@@ -15,7 +15,8 @@ jobs:
     name: Build image
     runs-on: ubuntu-latest
 
-  - name: Check out code to a GOPATH compatible directory
+  steps:
+  - name: Check out code
     uses: actions/checkout@v3
 
   - name: Debug

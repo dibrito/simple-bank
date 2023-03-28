@@ -33,7 +33,9 @@ jobs:
 
     - name: Build :latest
       # run: docker build -t ${GITHUB_REPOSITORY}:latest .
-      run: docker build -t ${GITHUB_REPOSITORY}:latest .
+      run: docker build -t otirbid/simple-bank:latest . |
+      docker images
+
 
     - name: Push to docker hub :latest
       uses: actions-hub/docker@master

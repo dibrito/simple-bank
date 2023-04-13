@@ -8,6 +8,7 @@ dropdb:
 	docker stop postgres12
 	docker rm postgres12
 
+# if "error: pq: role "root" does not exist" u probably have psql locally running
 migrateup:
 	migrate -path=db/migration -database="postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose up
 # migrate -path=db/migration -database="postgres://root:aYYa6Ij9aXXlQrBBuId6SRQdgU8ccIWe@dpg-cgi1ssak728s1brfp1cg-a.frankfurt-postgres.render.com/simple_bank_kmbe" -verbose up

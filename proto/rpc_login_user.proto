@@ -1,0 +1,24 @@
+syntax="proto3";
+
+package pb;
+
+// we need to set on proto3 extension "--proto_path=proto",
+// check extesion sessing json
+import "google/protobuf/timestamp.proto";
+import "user.proto";
+
+option go_package="github.com/dibrito/simple-bank/pb";
+
+message LoginUserRequest{
+    string username = 1;
+    string password = 2;
+}
+
+message LoginUserResponse{
+	User user = 1;
+    string  session_id = 2;
+	string access_token = 3;
+	string refresh_token = 4;
+	google.protobuf.Timestamp access_token_expire_at = 5;
+	google.protobuf.Timestamp refresh_token_expire_at = 6;
+}

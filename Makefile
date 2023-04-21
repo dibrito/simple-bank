@@ -42,4 +42,17 @@ dbdocs:
 dbschema:
 	dbml2sql --postgres -o ./docs/db/schema.sql ./docs/db/db.dbml
 
-.PHONY: postgress createdb dropdb migrateup migrateup1 migratedown migratedown1 sqlc test server mock dbdocs dbschema
+proto:
+	rm -rf pb/*.go \
+	rm -rf docs/swagger/*.swagger.json
+	protoc --proto_path=proto --go_out=pb --go_opt=paths=source_relative \
+    --go-grpc_out=pb --go-grpc_opt=paths=source_relative \
+	--grpc-gateway_out=pb --grpc-gateway_opt=paths=source_relative \
+	--openapiv2_out=docs/swagger --openapiv2_opt=allow_merge=true,merge_file_name=simple_bank  \
+    proto/*.proto
+	statik -src=./docs/swagger -dest=./docs
+
+evans:
+	evans --host localhost --port 9090 -r repl
+
+.PHONY: postgress createdb dropdb migrateup migrateup1 migratedown migratedown1 sqlc test server mock dbdocs dbschema proto evans

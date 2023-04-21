@@ -12,11 +12,13 @@ import (
 
 	"github.com/dibrito/simple-bank/api"
 	db "github.com/dibrito/simple-bank/db/sqlc"
+	_ "github.com/dibrito/simple-bank/docs/statik"
 	"github.com/dibrito/simple-bank/gapi"
 	"github.com/dibrito/simple-bank/pb"
 	"github.com/dibrito/simple-bank/util"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "github.com/lib/pq"
+	"github.com/rakyll/statik/fs"
 	"google.golang.org/grpc"
 )
 
@@ -89,6 +91,15 @@ func runGatawayServer(config util.Config, store db.Store) {
 	}
 	mux := http.NewServeMux()
 	mux.Handle("/", grpcMux)
+
+	// fs := http.FileServer(http.Dir("./docs/swagger"))
+	fsStatik, err := fs.New()
+	if err != nil {
+		log.Fatalf("cannot create statik file system:%v", err)
+	}
+	// slash at the end is necessary otherwise css and other files will break
+	swaggerHandler := http.StripPrefix("/swagger/", http.FileServer(fsStatik))
+	mux.Handle("/swagger/", swaggerHandler)
 	// start the server to listen to grpc requests in a port
 	listener, err := net.Listen("tcp", config.HttpAddress)
 	if err != nil {

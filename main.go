@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/golang-migrate/migrate/v4"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/encoding/protojson"
 
@@ -16,6 +17,10 @@ import (
 	"github.com/dibrito/simple-bank/gapi"
 	"github.com/dibrito/simple-bank/pb"
 	"github.com/dibrito/simple-bank/util"
+
+	// we need: v4/database/file and v4/source/file imports to run migration within the code
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "github.com/lib/pq"
 	"github.com/rakyll/statik/fs"
@@ -38,9 +43,25 @@ func main() {
 		log.Fatalf("unable to open db connection:%v", err)
 	}
 
+	// run db migration
+	runDBMigration(config.DBMigrationPath, config.DBSource)
+
 	store := db.NewStore(conn)
 	go runGatawayServer(config, store)
 	runGRPCServer(config, store)
+}
+
+func runDBMigration(migrationUrl, dbSource string) {
+	migration, err := migrate.New(migrationUrl, dbSource)
+	if err != nil {
+		log.Fatalf("cannot create a new migrate instance:%v", err)
+	}
+
+	err = migration.Up()
+	if err != nil && err != migrate.ErrNoChange {
+		log.Fatalf("failed to run migration up:%v", err)
+	}
+	log.Println("db migrated successfully!")
 }
 
 func runGRPCServer(config util.Config, store db.Store) {

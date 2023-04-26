@@ -19,6 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
+	SimpleBank_UpdateUser_FullMethodName = "/pb.SimpleBank/UpdateUser"
 	SimpleBank_CreateUser_FullMethodName = "/pb.SimpleBank/CreateUser"
 	SimpleBank_LoginUser_FullMethodName  = "/pb.SimpleBank/LoginUser"
 )
@@ -27,6 +28,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SimpleBankClient interface {
+	UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error)
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
 	LoginUser(ctx context.Context, in *LoginUserRequest, opts ...grpc.CallOption) (*LoginUserResponse, error)
 }
@@ -37,6 +39,15 @@ type simpleBankClient struct {
 
 func NewSimpleBankClient(cc grpc.ClientConnInterface) SimpleBankClient {
 	return &simpleBankClient{cc}
+}
+
+func (c *simpleBankClient) UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error) {
+	out := new(UpdateUserResponse)
+	err := c.cc.Invoke(ctx, SimpleBank_UpdateUser_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *simpleBankClient) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error) {
@@ -61,6 +72,7 @@ func (c *simpleBankClient) LoginUser(ctx context.Context, in *LoginUserRequest, 
 // All implementations must embed UnimplementedSimpleBankServer
 // for forward compatibility
 type SimpleBankServer interface {
+	UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
 	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
 	LoginUser(context.Context, *LoginUserRequest) (*LoginUserResponse, error)
 	mustEmbedUnimplementedSimpleBankServer()
@@ -70,6 +82,9 @@ type SimpleBankServer interface {
 type UnimplementedSimpleBankServer struct {
 }
 
+func (UnimplementedSimpleBankServer) UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
+}
 func (UnimplementedSimpleBankServer) CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
 }
@@ -87,6 +102,24 @@ type UnsafeSimpleBankServer interface {
 
 func RegisterSimpleBankServer(s grpc.ServiceRegistrar, srv SimpleBankServer) {
 	s.RegisterService(&SimpleBank_ServiceDesc, srv)
+}
+
+func _SimpleBank_UpdateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SimpleBankServer).UpdateUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SimpleBank_UpdateUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SimpleBankServer).UpdateUser(ctx, req.(*UpdateUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _SimpleBank_CreateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -132,6 +165,10 @@ var SimpleBank_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "pb.SimpleBank",
 	HandlerType: (*SimpleBankServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "UpdateUser",
+			Handler:    _SimpleBank_UpdateUser_Handler,
+		},
 		{
 			MethodName: "CreateUser",
 			Handler:    _SimpleBank_CreateUser_Handler,

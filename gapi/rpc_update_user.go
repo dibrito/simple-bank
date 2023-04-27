@@ -16,7 +16,15 @@ import (
 )
 
 func (server *Server) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb.UpdateUserResponse, error) {
-	// TODO: add authorization
+	payload, err := server.authorizeUser(ctx)
+	if err != nil {
+		return nil, unauthenticatedError(err)
+	}
+
+	if payload.Username != req.Username {
+		return nil, status.Errorf(codes.PermissionDenied, "cannot update other user's info")
+	}
+
 	violations := validateUpdateUserRequest(req)
 	if violations != nil {
 		return nil, invalidArgumentsError(violations)

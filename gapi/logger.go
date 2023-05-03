@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	// we need to change log for the pkg
@@ -37,4 +38,50 @@ func GrpcLogger(ctx context.Context,
 		Dur("duration", duration).
 		Msg("Received a gRPC request!")
 	return result, err
+}
+
+type ResponseRecorder struct {
+	http.ResponseWriter
+	StatusCode int
+	Body       []byte
+}
+
+func (rec *ResponseRecorder) Write(body []byte) (int, error) {
+	rec.Body = body
+	return rec.ResponseWriter.Write(body)
+}
+
+func (rec *ResponseRecorder) WriteHeader(statusCode int) {
+	rec.StatusCode = statusCode
+	rec.ResponseWriter.WriteHeader(statusCode)
+}
+
+// So, in order to have logs for HTTP requests,
+// We have to write a separate HTTP logger middleware function
+// And add it to the gRPC gateway server.
+func HttpLogger(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		start := time.Now()
+
+		rec := &ResponseRecorder{
+			ResponseWriter: res,
+			StatusCode:     http.StatusOK,
+		}
+
+		handler.ServeHTTP(rec, req)
+		duration := time.Since(start)
+
+		logger := log.Info()
+		if rec.StatusCode != http.StatusOK {
+			logger = log.Error().Bytes("body", rec.Body)
+		}
+
+		logger.Str("protocol", "http").
+			Str("method", req.Method).
+			Str("path", req.RequestURI).
+			Int("status_code", rec.StatusCode).
+			Str("status_text", http.StatusText(rec.StatusCode)).
+			Dur("duration", duration).
+			Msg("Received a HTTP request!")
+	})
 }

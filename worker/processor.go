@@ -5,7 +5,11 @@ import (
 
 	db "github.com/dibrito/simple-bank/db/sqlc"
 	"github.com/hibiken/asynq"
-	"github.com/hibiken/asynq/internal/context"
+)
+
+const (
+	QueueCritical = "critical"
+	QueueDefault  = "default"
 )
 
 type TaskProcessor interface {
@@ -16,13 +20,18 @@ type TaskProcessor interface {
 
 type RedisTaskProcessor struct {
 	server *asynq.Server
-	store  db.SQLStore
+	store  db.Store
 }
 
-func NewRedisTaskProcessor(redisOpt asynq.RedisClientOpt, store db.SQLStore) TaskProcessor {
+func NewRedisTaskProcessor(redisOpt asynq.RedisClientOpt, store db.Store) TaskProcessor {
 	server := asynq.NewServer(
 		redisOpt,
-		asynq.Config{},
+		asynq.Config{
+			Queues: map[string]int{
+				QueueCritical: 10,
+				QueueDefault:  5,
+			},
+		},
 	)
 	return &RedisTaskProcessor{
 		server: server,

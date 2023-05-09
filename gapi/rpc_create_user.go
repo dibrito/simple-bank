@@ -2,11 +2,14 @@ package gapi
 
 import (
 	"context"
+	"time"
 
 	db "github.com/dibrito/simple-bank/db/sqlc"
 	"github.com/dibrito/simple-bank/pb"
 	"github.com/dibrito/simple-bank/util"
 	"github.com/dibrito/simple-bank/val"
+	"github.com/dibrito/simple-bank/worker"
+	"github.com/hibiken/asynq"
 	"github.com/lib/pq"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	_ "google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -35,10 +38,25 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 			switch pqErr.Code.Name() {
 			// user table does not have FKs
 			case "unique_violation":
-				return nil, status.Errorf(codes.AlreadyExists, "username already exists:%s", err)
+				return nil, status.Errorf(codes.AlreadyExists, "username/email already exists:%s", err)
 			}
 		}
 		return nil, status.Errorf(codes.Internal, "fail to create user:%s", err)
+	}
+
+	// TODO: use db transaction to create user and send email
+	tp := &worker.PayloadSendVerifyEmail{
+		Username: u.Username,
+	}
+	opts := []asynq.Option{
+		asynq.MaxRetry(10),
+		asynq.ProcessIn(10 * time.Second),
+		asynq.Queue(worker.QueueCritical),
+	}
+
+	err = server.taskDistributer.DistributeTaskSendVerifyEmail(ctx, tp, opts...)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "fail to distribute task to send verify email:%s", err)
 	}
 
 	resp := &pb.CreateUserResponse{

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"os"
 
+	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/dibrito/simple-bank/gapi"
 	"github.com/dibrito/simple-bank/pb"
 	"github.com/dibrito/simple-bank/util"
+	"github.com/dibrito/simple-bank/worker"
 
 	// we need: v4/database/file and v4/source/file imports to run migration within the code
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -55,10 +57,17 @@ func main() {
 
 	// run db migration
 	runDBMigration(config.DBMigrationPath, config.DBSource)
-
 	store := db.NewStore(conn)
-	go runGatawayServer(config, store)
-	runGRPCServer(config, store)
+
+	// run redis
+	redisOpt := asynq.RedisClientOpt{
+		Addr: config.RedisAddress,
+	}
+
+	taskDistributer := worker.NewRedisDistributor(redisOpt)
+	go runTaskProcessor(redisOpt, store)
+	go runGatawayServer(config, store, taskDistributer)
+	runGRPCServer(config, store, taskDistributer)
 }
 
 func runDBMigration(migrationUrl, dbSource string) {
@@ -74,8 +83,8 @@ func runDBMigration(migrationUrl, dbSource string) {
 	log.Info().Msg("db migrated successfully!")
 }
 
-func runGRPCServer(config util.Config, store db.Store) {
-	server, err := gapi.NewServer(config, store)
+func runGRPCServer(config util.Config, store db.Store, td worker.TaskDistributor) {
+	server, err := gapi.NewServer(config, store, td)
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot create server:%v")
 	}
@@ -101,8 +110,8 @@ func runGRPCServer(config util.Config, store db.Store) {
 	}
 }
 
-func runGatawayServer(config util.Config, store db.Store) {
-	server, err := gapi.NewServer(config, store)
+func runGatawayServer(config util.Config, store db.Store, td worker.TaskDistributor) {
+	server, err := gapi.NewServer(config, store, td)
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot create server:%v")
 	}
@@ -157,4 +166,18 @@ func runHttpServer(config util.Config, store db.Store) {
 		log.Fatal().Err(err).Msg("cannot start server:%v")
 	}
 	log.Info().Msg("=============http server up=============")
+}
+
+// We will have to call runTaskProcessor&nbsp; in a separate go routine
+// because when the processor starts,
+// the Asynq server will block and keep polling Redis for new tasks.
+// its design is pretty similar to that of an HTTP webserver.
+// So it blocks, just like the HTTP server block while waiting for requests from the client.
+func runTaskProcessor(redisOpt asynq.RedisClientOpt, store db.Store) {
+	tp := worker.NewRedisTaskProcessor(redisOpt, store)
+	log.Info().Msg("start task processor")
+	err := tp.Start()
+	if err != nil {
+		log.Fatal().Err(err).Msg("start task processor")
+	}
 }

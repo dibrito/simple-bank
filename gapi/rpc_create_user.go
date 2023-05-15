@@ -2,11 +2,14 @@ package gapi
 
 import (
 	"context"
+	"time"
 
 	db "github.com/dibrito/simple-bank/db/sqlc"
 	"github.com/dibrito/simple-bank/pb"
 	"github.com/dibrito/simple-bank/util"
 	"github.com/dibrito/simple-bank/val"
+	"github.com/dibrito/simple-bank/worker"
+	"github.com/hibiken/asynq"
 	"github.com/lib/pq"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	_ "google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -24,12 +27,28 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to hash password:%s", err)
 	}
-	u, err := server.store.CreateUser(ctx, db.CreateUserParams{
-		Username:       req.GetUsername(),
-		HashedPassword: hashedPassword,
-		Email:          req.GetEmail(),
-		FullName:       req.GetFullName(),
-	})
+
+	arg := db.CreateUserTxParams{
+		CreateUserParams: db.CreateUserParams{
+			Username:       req.GetUsername(),
+			HashedPassword: hashedPassword,
+			Email:          req.GetEmail(),
+			FullName:       req.GetFullName(),
+		},
+		AfterCreate: func(u db.User) error {
+			tp := &worker.PayloadSendVerifyEmail{
+				Username: u.Username,
+			}
+			opts := []asynq.Option{
+				asynq.MaxRetry(10),
+				// task delay
+				asynq.ProcessIn(10 * time.Second),
+				asynq.Queue(worker.QueueCritical),
+			}
+			return server.taskDistributer.DistributeTaskSendVerifyEmail(ctx, tp, opts...)
+		}}
+
+	u, err := server.store.CreateUserTx(ctx, arg)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code.Name() {
@@ -42,7 +61,7 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 	}
 
 	resp := &pb.CreateUserResponse{
-		User: convertUser(u),
+		User: convertUser(u.User),
 	}
 	return resp, nil
 }

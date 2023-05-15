@@ -2,11 +2,14 @@ package gapi
 
 import (
 	"context"
+	"time"
 
 	db "github.com/dibrito/simple-bank/db/sqlc"
 	"github.com/dibrito/simple-bank/pb"
 	"github.com/dibrito/simple-bank/util"
 	"github.com/dibrito/simple-bank/val"
+	"github.com/dibrito/simple-bank/worker"
+	"github.com/hibiken/asynq"
 	"github.com/lib/pq"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	_ "google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -45,7 +48,7 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 			return server.taskDistributer.DistributeTaskSendVerifyEmail(ctx, tp, opts...)
 		}}
 
-	txResult, err := server.store.CreateUserTx(ctx, arg)
+	u, err := server.store.CreateUserTx(ctx, arg)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code.Name() {
@@ -58,7 +61,7 @@ func (server *Server) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 	}
 
 	resp := &pb.CreateUserResponse{
-		User: convertUser(u),
+		User: convertUser(u.User),
 	}
 	return resp, nil
 }

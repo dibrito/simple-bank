@@ -7,6 +7,7 @@ import (
 	"github.com/dibrito/simple-bank/pb"
 	"github.com/dibrito/simple-bank/token"
 	"github.com/dibrito/simple-bank/util"
+	"github.com/dibrito/simple-bank/worker"
 )
 
 // Server serves gRPC requests for our banking service.
@@ -18,21 +19,23 @@ type Server struct {
 	// it easier for a team
 	// to work on multiple RPCs in parallel without blocking or conflicting with each other.
 	pb.UnimplementedSimpleBankServer
-	config     util.Config
-	store      db.Store
-	tokenMaker token.Maker
+	config          util.Config
+	store           db.Store
+	tokenMaker      token.Maker
+	taskDistributer worker.TaskDistributor
 }
 
 // NewServer creates a new gRPC server.
-func NewServer(config util.Config, store db.Store) (*Server, error) {
+func NewServer(config util.Config, store db.Store, td worker.TaskDistributor) (*Server, error) {
 	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
 	if err != nil {
 		return nil, fmt.Errorf("can not create token maker: %v", err)
 	}
 	server := &Server{
-		store:      store,
-		config:     config,
-		tokenMaker: tokenMaker,
+		store:           store,
+		config:          config,
+		tokenMaker:      tokenMaker,
+		taskDistributer: td,
 	}
 	return server, nil
 }

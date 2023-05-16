@@ -24,6 +24,9 @@ migratedown:
 migratedown1:
 	migrate -path=db/migration -database="${DB_URL}" -verbose down 1
 
+new_migration:
+	migrate create -ext sql -dir db/migration -seq $(name)
+
 sqlc:
 	sqlc generate
 
@@ -55,4 +58,4 @@ proto:
 evans:
 	evans --host localhost --port 9090 -r repl
 
-.PHONY: postgress createdb dropdb migrateup migrateup1 migratedown migratedown1 sqlc test server mock dbdocs dbschema proto evans
+.PHONY: postgress createdb dropdb migrateup migrateup1 migratedown migratedown1 sqlc test server mock dbdocs dbschema proto evans new_migrate

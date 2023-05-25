@@ -38,6 +38,7 @@ server:
 
 mock:
 	mockgen -package db_mock --destination=./db/mocks/store.go github.com/dibrito/simple-bank/db/sqlc Store
+	mockgen -package mockwd --destination=./worker/mocks/distributor.go github.com/dibrito/simple-bank/worker TaskDistributor
 
 dbdocs:
 	dbdocs build docs/db/db.dbml

@@ -1,6 +1,7 @@
 package val
 
 import (
+	"errors"
 	"fmt"
 	"net/mail"
 	"regexp"
@@ -11,6 +12,17 @@ var (
 	// \s is to space char
 	isValidFullName = regexp.MustCompile(`^[a-zA-Z\s]+$`).MatchString
 )
+
+func ValidateEmailId(id int64) error {
+	if id <= 0 {
+		return errors.New("must be a positive integer")
+	}
+	return nil
+}
+
+func ValidateSecretCode(s string) error {
+	return ValidateString(s, 32, 128)
+}
 
 func ValidateString(value string, minLenght, maxLenght int) error {
 	n := len(value)

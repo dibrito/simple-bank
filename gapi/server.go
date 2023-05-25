@@ -26,15 +26,16 @@ type Server struct {
 }
 
 // NewServer creates a new gRPC server.
-func NewServer(config util.Config, store db.Store) (*Server, error) {
+func NewServer(config util.Config, store db.Store, td worker.TaskDistributor) (*Server, error) {
 	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
 	if err != nil {
 		return nil, fmt.Errorf("can not create token maker: %v", err)
 	}
 	server := &Server{
-		store:      store,
-		config:     config,
-		tokenMaker: tokenMaker,
+		store:           store,
+		config:          config,
+		tokenMaker:      tokenMaker,
+		taskDistributer: td,
 	}
 	return server, nil
 }
